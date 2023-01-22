@@ -8,8 +8,14 @@ from enum import Enum
 
 
 class Socket:
+    class Protocol(Enum):
+        TCP_IPV4 = '/proc/net/tcp'
+        UDP_IPV4 = '/proc/net/udp'
+        TCP_IPV6 = '/proc/net/tcp6'
+        UDP_IPV6 = '/proc/net/udp6'
+
     class Status(Enum):
-        ESTABLISHED = 1
+        TCP_ESTABLISHED = 1
         TCP_SYN_SENT = 2
         TCP_SYN_RECV = 3
         TCP_FIN_WAIT1 = 4
@@ -23,7 +29,8 @@ class Socket:
         TCP_NEW_SYN_RECV = 12
         TCP_MAX_STATES = 13
 
-    def __init__(self, inode, local_addr, remote_addr, status, rx_queue, tx_queue):
+    def __init__(self, proto, inode, local_addr, remote_addr, status, rx_queue, tx_queue):
+        self.proto = proto
         self.inode = inode
         self.local_addr = local_addr
         self.remote_addr = remote_addr
@@ -52,7 +59,7 @@ class Proc:
 
         return name
 
-    def update(self, net_tcp):
+    def update(self, net):
         if os.path.exists(self.proc_path):
             fd_path = os.path.join(self.proc_path, 'fd')
             for file in os.listdir(fd_path):
@@ -61,7 +68,7 @@ class Proc:
                 tg = os.path.basename(os.path.realpath(file))
                 if tg.startswith('socket:'):
                     inode = re.match('socket:\\[(\\d+)]', tg).group(1)
-                    self.sockets[fd] = net_tcp.get(inode)
+                    self.sockets[fd] = net.get(inode)
         else:
             self.running = False
 
@@ -77,35 +84,38 @@ def convert_linux_netaddr(address):
 
 def main(argv):
     procs = []
+
     for pid in argv:
         procs.append(Proc(pid))
 
     while True:
         print('\033c')
-        net_tcp = dict()
+        net = dict()
         sockets = []
 
-        with open('/proc/net/tcp') as f:
-            for line in f.readlines()[1:]:
-                cols = re.split(r'\s+', line.strip())
-                local_addr = convert_linux_netaddr(cols[1])
-                remote_addr = convert_linux_netaddr(cols[2])
-                status = int(cols[3], 16)
-                tx, rx = [int(cpt, 16) for cpt in cols[4].split(':')]
-                inode = cols[9]
-                try:
-                    net_tcp[inode] = Socket(inode, local_addr, remote_addr, status, rx, tx)
-                except KeyError:
-                    net_tcp[inode] = None
+        for proto in Socket.Protocol:
+            with open(proto.value) as f:
+                for line in f.readlines()[1:]:
+                    cols = re.split(r'\s+', line.strip())
+                    local_addr = convert_linux_netaddr(cols[1])
+                    remote_addr = convert_linux_netaddr(cols[2])
+                    status = int(cols[3], 16)
+                    tx, rx = [int(cpt, 16) for cpt in cols[4].split(':')]
+                    inode = cols[9]
+                    try:
+                        net[inode] = Socket(proto, inode, local_addr, remote_addr, status, rx, tx)
+                    except KeyError:
+                        net[inode] = None
 
         for pr in procs:
-            pr.update(net_tcp)
+            pr.update(net)
             print(f'Proc[{pr.pid}] : {pr.name}')
             for fd in pr.sockets.keys():
                 sock = pr.sockets[fd]
                 if sock is not None:
                     print(f' - Socket[{fd}] (Inode={sock.inode})')
                     print(f'        `- {sock.local_addr} <=> {sock.remote_addr}')
+                    print(f'        `- Protocol\t= {sock.proto.name}')
                     print(f'        `- Status\t= {sock.status.name}')
                     print(f'        `- RX Queue\t= {sock.rx_queue}')
                     print(f'        `- TX Queue\t= {sock.tx_queue}')
