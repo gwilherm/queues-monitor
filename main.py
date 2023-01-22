@@ -109,16 +109,19 @@ def main(argv):
 
         for pr in procs:
             pr.update(net)
-            print(f'Proc[{pr.pid}] : {pr.name}')
-            for fd in pr.sockets.keys():
-                sock = pr.sockets[fd]
-                if sock is not None:
-                    print(f' - Socket[{fd}] (Inode={sock.inode})')
-                    print(f'        `- {sock.local_addr} <=> {sock.remote_addr}')
-                    print(f'        `- Protocol\t= {sock.proto.name}')
-                    print(f'        `- Status\t= {sock.status.name}')
-                    print(f'        `- RX Queue\t= {sock.rx_queue}')
-                    print(f'        `- TX Queue\t= {sock.tx_queue}')
+            if pr.running:
+                print(f'Proc[{pr.pid}] : {pr.name}')
+                for fd in pr.sockets.keys():
+                    sock = pr.sockets[fd]
+                    if sock is not None:
+                        print(f' - Socket[{fd}] (Inode={sock.inode})')
+                        print(f'        `- {sock.local_addr} <=> {sock.remote_addr}')
+                        print(f'        `- Protocol\t= {sock.proto.name}')
+                        print(f'        `- Status\t= {sock.status.name}')
+                        print(f'        `- RX Queue\t= {sock.rx_queue}')
+                        print(f'        `- TX Queue\t= {sock.tx_queue}')
+            else:
+                print(f'Proc[{pr.pid}] : not running.')
 
         time.sleep(1)
 
