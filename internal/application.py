@@ -15,10 +15,11 @@ def convert_linux_netaddr(address):
 
 
 class Application:
-    def __init__(self, pid_list):
+    def __init__(self, args):
         self.procs = []
+        self.interval = int(args.interval)
 
-        for pid in pid_list:
+        for pid in args.pid_list:
             self.procs.append(Proc(pid))
 
     def run(self):
@@ -56,4 +57,4 @@ class Application:
                 else:
                     print(f'Proc[{pr.pid}] : not running.')
 
-            time.sleep(1)
+            time.sleep(self.interval)
