@@ -3,6 +3,7 @@ import time
 
 from .proc import Proc
 from .sock import Socket
+from .csv_serializer import CsvSerializer
 
 
 def convert_linux_netaddr(address):
@@ -28,11 +29,16 @@ class Application:
         self.procs = []
         self.interval = args.interval
 
+        if args.csv:
+            print(f'csv={args.csv}')
+            self.csv = CsvSerializer(args.csv)
+
         for pid in args.pid_list:
             self.procs.append(Proc(pid))
 
     def run(self):
         while True:
+            now = time.time()
             print('\033c')
             net = dict()
 
@@ -58,6 +64,10 @@ class Application:
                         sock = pr.sockets[fd]
                         if sock is not None:
                             display(fd, sock)
+                            if self.csv:
+                                self.csv.add_row(now, sock.inode, pr.pid,
+                                                 sock.local_addr, sock.remote_addr, sock.proto.name, sock.status.name,
+                                                 sock.tx_queue, sock.rx_queue)
                 else:
                     print(f'Proc[{pr.pid}] : not running.')
 
