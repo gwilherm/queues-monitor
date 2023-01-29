@@ -14,6 +14,15 @@ def convert_linux_netaddr(address):
     return "{}:{}".format(addr, port)
 
 
+def display(fd, sock):
+    print(f' - Socket[{fd}] (Inode={sock.inode})')
+    print(f'        `- {sock.local_addr} <=> {sock.remote_addr}')
+    print(f'        `- Protocol\t= {sock.proto.name}')
+    print(f'        `- Status\t= {sock.status.name}')
+    print(f'        `- RX Queue\t= {sock.rx_queue}')
+    print(f'        `- TX Queue\t= {sock.tx_queue}')
+
+
 class Application:
     def __init__(self, args):
         self.procs = []
@@ -48,12 +57,7 @@ class Application:
                     for fd in pr.sockets.keys():
                         sock = pr.sockets[fd]
                         if sock is not None:
-                            print(f' - Socket[{fd}] (Inode={sock.inode})')
-                            print(f'        `- {sock.local_addr} <=> {sock.remote_addr}')
-                            print(f'        `- Protocol\t= {sock.proto.name}')
-                            print(f'        `- Status\t= {sock.status.name}')
-                            print(f'        `- RX Queue\t= {sock.rx_queue}')
-                            print(f'        `- TX Queue\t= {sock.tx_queue}')
+                            display(fd, sock)
                 else:
                     print(f'Proc[{pr.pid}] : not running.')
 
