@@ -1,6 +1,7 @@
 #!/bin/env python3
 
 import sys
+import signal
 import argparse
 from internal import Application
 
@@ -15,9 +16,11 @@ def main(argv):
 
     args = parser.parse_args()
 
-    print(args)
+    app = Application(args)
 
-    Application(args).run()
+    signal.signal(signal.SIGINT, app.stop)
+
+    app.run()
 
 
 if __name__ == '__main__':

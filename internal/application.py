@@ -26,6 +26,7 @@ def display(fd, sock):
 
 class Application:
     def __init__(self, args):
+        self.running = True
         self.procs = []
         self.interval = args.interval
 
@@ -36,8 +37,11 @@ class Application:
         for pid in args.pid_list:
             self.procs.append(Proc(pid))
 
+    def stop(self, signum, frame):
+        self.running = False
+
     def run(self):
-        while True:
+        while self.running:
             now = time.time()
             print('\033c')
             net = dict()
@@ -72,3 +76,8 @@ class Application:
                     print(f'Proc[{pr.pid}] : not running.')
 
             time.sleep(self.interval)
+
+        print('Terminating.')
+
+        if self.csv:
+            self.csv.close()
