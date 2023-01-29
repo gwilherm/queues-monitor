@@ -26,7 +26,7 @@ def display(fd, sock):
 class Application:
     def __init__(self, args):
         self.procs = []
-        self.interval = int(args.interval)
+        self.interval = args.interval
 
         for pid in args.pid_list:
             self.procs.append(Proc(pid))
