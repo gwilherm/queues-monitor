@@ -1,2 +1,2 @@
 # queues-monitor
-Monitor Linux procs TCP queues
+Monitor Linux procs TCP/UDP queues
