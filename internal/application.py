@@ -29,9 +29,9 @@ class Application:
         self.running = True
         self.procs = []
         self.interval = args.interval
+        self.csv = None
 
         if args.csv:
-            print(f'csv={args.csv}')
             self.csv = CsvSerializer(args.csv)
 
         for pid in args.pid_list:
