@@ -69,7 +69,7 @@ class Application:
                         if sock is not None:
                             display(fd, sock)
                             if self.csv:
-                                self.csv.add_row(now, sock.inode, pr.pid,
+                                self.csv.add_row(now, sock.inode, pr.pid, pr.name,
                                                  sock.local_addr, sock.remote_addr, sock.proto.name, sock.status.name,
                                                  sock.tx_queue, sock.rx_queue)
                 else:
